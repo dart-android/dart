@@ -1,0 +1,114 @@
+name: build
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: Dart SDK git ref
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Dart SDK git ref
+        required: true
+        type: string
+        default: main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    container:
+      image: docker.io/library/debian
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - host-arch: x64
+            target-arch: x64
+          - host-arch: x64
+            target-arch: ia32
+          - host-arch: x64
+            target-arch: arm64
+          - host-arch: x64
+            target-arch: arm
+
+    steps:
+      - name: Install build tools
+        run: |
+          apt-get update
+          apt-get install --no-install-recommends -y ca-certificates curl git python3 xz-utils
+
+      - name: Setup multiarch
+        run: |
+          case ${{ matrix.host-arch }} in
+            arm64)
+              dpkg --add-architecture armhf
+              apt-get update
+              apt-get install --no-install-recommends -y libc6:armhf
+            ;;
+            x64)
+              dpkg --add-architecture i386
+              apt-get update
+              apt-get install --no-install-recommends -y libc6:i386
+            ;;
+          esac
+
+      - name: Fetch Dart SDK
+        id: fetch
+        run: |
+          git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+          export DEPOT_TOOLS_UPDATE=0 PATH=$PWD/depot_tools:$PATH
+
+          mkdir dart-sdk
+          cd dart-sdk
+          gclient config --name sdk https://dart.googlesource.com/sdk.git@${{ inputs.ref }}
+          echo "target_os = ['android']" | tee -a .gclient
+          gclient sync --no-history
+
+      - name: Build
+        run: |
+          cd dart-sdk/sdk
+          ./tools/build.py --no-goma --mode release --os android --arch ${{ matrix.target-arch }} --gn-args 'dart_snapshot_kind="app-jit"' create_sdk
+
+      - name: Archive
+        run: |
+          tar -czf dartsdk-android-${{ matrix.target-arch }}-release.tar.gz -C dart-sdk/sdk/out/Release* -- dart-sdk
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: dartsdk-android-${{ matrix.target-arch }}-${{ inputs.ref }}
+          path: dartsdk-android-${{ matrix.target-arch }}-release.tar.gz
+          if-no-files-found: error
+
+  tag:
+    needs: [build]
+
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
+
+      - name: Tag
+        run: |
+          if git ls-remote --exit-code --tags https://dart.googlesource.com/sdk.git "${{ inputs.ref }}"; then
+            git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+            git config user.name github-actions[bot]
+            if test -n "$(git tag -l ${{ inputs.ref }})"; then
+              echo "Tag ${{ inputs.ref }} has already been created."
+              exit 0
+            fi
+            git tag -m ${{ inputs.ref }} ${{ inputs.ref }}
+            echo "Tagged ${{ inputs.ref }}."
+            git push origin refs/tags/${{ inputs.ref }}
+            echo "Pushed tag ${{ inputs.ref }}."
+          fi
