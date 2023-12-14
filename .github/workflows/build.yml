@@ -83,6 +83,7 @@ jobs:
           name: dartsdk-android-${{ matrix.target-arch }}-${{ inputs.ref }}
           path: dartsdk-android-${{ matrix.target-arch }}-release.tar.gz
           if-no-files-found: error
+          compression-level: 0
 
   tag:
     needs: [build]
