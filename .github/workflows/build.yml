@@ -78,7 +78,7 @@ jobs:
           tar -czf dartsdk-android-${{ matrix.target-arch }}-release.tar.gz -C dart-sdk/sdk/out/Release* -- dart-sdk
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dartsdk-android-${{ matrix.target-arch }}-${{ inputs.ref }}
           path: dartsdk-android-${{ matrix.target-arch }}-release.tar.gz
