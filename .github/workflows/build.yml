@@ -34,6 +34,8 @@ jobs:
             target-arch: arm64
           - host-arch: x64
             target-arch: arm
+          - host-arch: x64
+            target-arch: riscv64
 
     steps:
       - name: Install build tools
