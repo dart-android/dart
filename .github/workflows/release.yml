@@ -40,6 +40,11 @@ jobs:
         with:
           name: dartsdk-android-arm-${{ github.ref_name }}
 
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dartsdk-android-riscv64-${{ github.ref_name }}
+
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
@@ -49,6 +54,7 @@ jobs:
             dartsdk-android-ia32-release.tar.gz
             dartsdk-android-arm64-release.tar.gz
             dartsdk-android-arm-release.tar.gz
+            dartsdk-android-riscv64-release.tar.gz
 
   container:
     needs: [release]
@@ -81,6 +87,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: dartsdk-android-arm-${{ github.ref_name }}
+
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dartsdk-android-riscv64-${{ github.ref_name }}
 
       - name: Docker Metadata
         id: docker-metadata
