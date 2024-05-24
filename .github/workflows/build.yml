@@ -16,7 +16,49 @@ on:
         default: main
 
 jobs:
+  archive:
+    runs-on: ubuntu-latest
+
+    container:
+      image: docker.io/library/debian
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - host-arch: x64
+
+    steps:
+      - name: Install build tools
+        run: |
+          apt-get update
+          apt-get install --no-install-recommends -y ca-certificates curl git python3
+
+      - name: Fetch Dart SDK
+        run: |
+          git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+          export DEPOT_TOOLS_UPDATE=0 PATH=$PWD/depot_tools:$PATH
+
+          mkdir dart-sdk
+          cd dart-sdk
+          gclient config --name sdk https://dart.googlesource.com/sdk.git@${{ inputs.ref }}
+          gclient sync --no-history
+
+      - name: Archive
+        run: |
+          tar -czf dart-${{ inputs.ref }}-${{ matrix.host-arch }}.tar.gz dart-sdk
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dart-${{ inputs.ref }}-${{ matrix.host-arch }}
+          path: dart-${{ inputs.ref }}-${{ matrix.host-arch }}.tar.gz
+          if-no-files-found: error
+          compression-level: 0
+
   build:
+    needs: [archive]
+
     runs-on: ubuntu-latest
 
     container:
@@ -38,10 +80,19 @@ jobs:
             target-arch: riscv64
 
     steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dart-${{ inputs.ref }}-${{ matrix.host-arch }}
+
+      - name: Unarchive
+        run: |
+          tar -xzf dart-${{ inputs.ref }}-${{ matrix.host-arch }}.tar.gz
+
       - name: Install build tools
         run: |
           apt-get update
-          apt-get install --no-install-recommends -y ca-certificates curl git python3 xz-utils
+          apt-get install --no-install-recommends -y ca-certificates curl git python3
 
       - name: Setup multiarch
         run: |
@@ -57,18 +108,6 @@ jobs:
               apt-get install --no-install-recommends -y libc6:i386
             ;;
           esac
-
-      - name: Fetch Dart SDK
-        id: fetch
-        run: |
-          git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
-          export DEPOT_TOOLS_UPDATE=0 PATH=$PWD/depot_tools:$PATH
-
-          mkdir dart-sdk
-          cd dart-sdk
-          gclient config --name sdk https://dart.googlesource.com/sdk.git@${{ inputs.ref }}
-          echo "target_os = ['android']" | tee -a .gclient
-          gclient sync --no-history
 
       - name: Build
         run: |
