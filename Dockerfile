@@ -18,8 +18,8 @@ RUN case "$(uname -m)" in \
 
 FROM ghcr.io/dart-android/toybox
 
-ENV DART_SDK /system/lib64/dart
-ENV PATH $DART_SDK/bin:$PATH
+ENV DART_SDK=/system/lib64/dart
+ENV PATH=$DART_SDK/bin:$PATH
 
 COPY --from=0 /system/lib64/dart /system/lib64/dart
 COPY --from=0 /system/lib/dart /system/lib/dart
