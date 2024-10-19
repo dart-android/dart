@@ -1,4 +1,4 @@
-FROM ghcr.io/dart-android/toybox
+FROM ghcr.io/dart-android/toybox:nightly
 
 ENV DART_SDK=/system/lib64/dart
 ENV PATH=$DART_SDK/bin:$PATH
