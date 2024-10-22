@@ -23,38 +23,14 @@ jobs:
       - name: Download Artifact
         uses: actions/download-artifact@v4
         with:
-          name: dartsdk-android-x64-${{ github.ref_name }}
-
-      - name: Download Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: dartsdk-android-ia32-${{ github.ref_name }}
-
-      - name: Download Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: dartsdk-android-arm64-${{ github.ref_name }}
-
-      - name: Download Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: dartsdk-android-arm-${{ github.ref_name }}
-
-      - name: Download Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: dartsdk-android-riscv64-${{ github.ref_name }}
+          pattern: dartsdk-android-*-${{ github.ref_name }}
 
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
           prerelease: ${{ endsWith(github.ref_name, '.beta') || endsWith(github.ref_name, '.dev') }}
           files: |
-            dartsdk-android-x64-release.tar.gz
-            dartsdk-android-ia32-release.tar.gz
-            dartsdk-android-arm64-release.tar.gz
-            dartsdk-android-arm-release.tar.gz
-            dartsdk-android-riscv64-release.tar.gz
+            dartsdk-android-*/dartsdk-android-*-release.tar.gz
 
   container:
     needs: [release]
@@ -71,27 +47,10 @@ jobs:
       - name: Download Artifact
         uses: actions/download-artifact@v4
         with:
-          name: dartsdk-android-x64-${{ github.ref_name }}
+          pattern: dartsdk-android-*-${{ github.ref_name }}
 
-      - name: Download Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: dartsdk-android-ia32-${{ github.ref_name }}
-
-      - name: Download Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: dartsdk-android-arm64-${{ github.ref_name }}
-
-      - name: Download Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: dartsdk-android-arm-${{ github.ref_name }}
-
-      - name: Download Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: dartsdk-android-riscv64-${{ github.ref_name }}
+      - name: Prepare
+        run: mv dartsdk-android-*/dartsdk-android-*-release.tar.gz .
 
       - name: Docker Metadata
         id: docker-metadata
