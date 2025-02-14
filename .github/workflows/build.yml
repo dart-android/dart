@@ -62,6 +62,10 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    permissions:
+      id-token: write
+      attestations: write
+
     container:
       image: docker.io/library/debian
 
@@ -118,6 +122,11 @@ jobs:
       - name: Archive
         run: |
           tar -czf dartsdk-android-${{ matrix.target-arch }}-release.tar.gz -C dart-sdk/sdk/out/Release* -- dart-sdk
+
+      - name: Generate artifact attestation
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: dartsdk-android-${{ matrix.target-arch }}-release.tar.gz
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
