@@ -63,8 +63,9 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      id-token: write
+      actions: write
       attestations: write
+      id-token: write
 
     container:
       image: docker.io/library/debian

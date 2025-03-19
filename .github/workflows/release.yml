@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     permissions:
+      actions: write
       attestations: write
       id-token: write
     uses: ./.github/workflows/build.yml
