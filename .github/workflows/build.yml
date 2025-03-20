@@ -82,7 +82,7 @@ jobs:
           - host-arch: x64
             target-arch: ia32
             os: ubuntu-latest
-          - host-arch: arm64
+          - host-arch: x64
             target-arch: arm64
             os: ubuntu-latest
           - host-arch: x64
