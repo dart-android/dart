@@ -122,7 +122,7 @@ jobs:
       - name: Build
         run: |
           cd dart-sdk/sdk
-          ./tools/build.py --mode release --os android --arch ${{ matrix.target-arch }} --gn-args 'dart_snapshot_kind="app-jit"' create_sdk
+          ./tools/build.py --mode release --os android --arch ${{ matrix.target-arch }} create_sdk
 
       - name: Archive
         run: |
