@@ -17,7 +17,7 @@ on:
 
 jobs:
   archive:
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.host-arch == 'arm64' && 'ubuntu-24.04-arm' || matrix.host-arch == 'x64' && 'ubuntu-latest' || null }}
 
     container:
       image: docker.io/library/debian
@@ -25,11 +25,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - host-arch: x64
-            os: ubuntu-latest
-          - host-arch: arm64
-            os: ubuntu-24.04-arm
+        host-arch:
+          - x64
+          - arm64
 
     steps:
       - name: Install build tools
@@ -62,7 +60,7 @@ jobs:
   build:
     needs: [archive]
 
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.host-arch == 'arm64' && 'ubuntu-24.04-arm' || matrix.host-arch == 'x64' && 'ubuntu-latest' || null }}
 
     permissions:
       actions: write
@@ -77,17 +75,13 @@ jobs:
       matrix:
         include:
           - host-arch: x64
-            target-arch: x64
-            os: ubuntu-latest
+            target-arch: arm
           - host-arch: x64
             target-arch: arm64
-            os: ubuntu-latest
-          - host-arch: x64
-            target-arch: arm
-            os: ubuntu-latest
           - host-arch: x64
             target-arch: riscv64
-            os: ubuntu-latest
+          - host-arch: x64
+            target-arch: x64
 
     steps:
       - name: Download Artifact
