@@ -44,6 +44,11 @@ jobs:
           gclient config --name sdk --custom-var download_android_deps=True https://dart.googlesource.com/sdk.git@${{ inputs.ref }}
           gclient sync --no-history
 
+      - name: Remove build tools
+        run: |
+          cd dart-sdk/sdk
+          rm -rf buildtools/reclient buildtools/reclient-linux
+
       - name: Archive
         run: |
           tar -czf dart-${{ inputs.ref }}-${{ matrix.host-arch }}.tar.gz dart-sdk
