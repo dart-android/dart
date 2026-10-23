@@ -122,6 +122,8 @@ jobs:
         run: |
           cd dart-sdk/sdk
           ./tools/build.py --mode release --os android --arch ${{ matrix.target-arch }} create_sdk
+        env:
+          DART_SISO: 0
 
       - name: Archive
         run: |
