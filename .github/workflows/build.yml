@@ -118,6 +118,12 @@ jobs:
           cd dart-sdk/sdk
           ./tools/build.py --mode release --os android --arch ${{ matrix.target-arch }} create_sdk
 
+      - name: Debug
+        if: failure()
+        run: |
+          cd dart-sdk/sdk
+          cat ./out/Release*/siso_output
+
       - name: Archive
         run: |
           tar -czf dartsdk-android-${{ matrix.target-arch }}-release.tar.gz -C dart-sdk/sdk/out/Release* -- dart-sdk
