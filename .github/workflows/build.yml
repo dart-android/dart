@@ -44,33 +44,6 @@ jobs:
           gclient config --name sdk --custom-var download_android_deps=True https://dart.googlesource.com/sdk.git@${{ inputs.ref }}
           gclient sync --no-history
 
-      - name: Patch for https://github.com/dart-lang/sdk/issues/64857
-        run: |
-          cd dart-sdk/sdk
-          if grep -q -- -gsplit-dwarf build/config/compiler/BUILD.gn; then
-            git apply - <<'EOF'
-          diff --git a/build/config/compiler/BUILD.gn b/build/config/compiler/BUILD.gn
-          index d41915c1..3b8c69dc 100644
-          --- a/build/config/compiler/BUILD.gn
-          +++ b/build/config/compiler/BUILD.gn
-          @@ -992,8 +992,12 @@ config("symbols") {
-               cflags = [ "-g" ]
-               asmflags = [ "-g" ]
-               if (is_clang) {
-          -      cflags += [ "-gsplit-dwarf=single" ]
-          -      asmflags += [ "-gsplit-dwarf=single" ]
-          +      # On Android riscv64, -gsplit-dwarf is unsupported with RISC-V linker
-          +      # relaxation (-mrelax)
-          +      if (!is_android || current_cpu != "riscv64") {
-          +        cflags += [ "-gsplit-dwarf=single" ]
-          +        asmflags += [ "-gsplit-dwarf=single" ]
-          +      }
-               } else {
-                 cflags += [ "-gsplit-dwarf" ]
-                 asmflags += [ "-gsplit-dwarf" ]
-          EOF
-          fi
-
       - name: Archive
         run: |
           tar -czf dart-${{ inputs.ref }}-${{ matrix.host-arch }}.tar.gz dart-sdk
